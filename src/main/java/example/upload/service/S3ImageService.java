@@ -3,7 +3,6 @@ package example.upload.service;
 import example.global.exception.CustomApplicationException;
 import example.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class S3ImageService {
@@ -90,7 +88,6 @@ public class S3ImageService {
             // S3에 이미지 업로드
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, file.getSize()));
         } catch (Exception exception) {
-            log.error(exception.getMessage(), exception);
             throw new CustomApplicationException(ErrorCode.IO_EXCEPTION_UPLOAD_FILE);
         }
 
