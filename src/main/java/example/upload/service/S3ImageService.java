@@ -48,9 +48,10 @@ public class S3ImageService {
     }
 
     private void validateFile(String filename) {
-        // 파일 이름 존재 유무 검증
+        System.out.println(filename);
+        // 파일 존재 유무 검증
         if (filename == null || filename.isEmpty()) {
-            throw new CustomApplicationException(ErrorCode.NOT_EXIST_FILE_NAME);
+            throw new CustomApplicationException(ErrorCode.NOT_EXIST_FILE);
         }
 
         // 확장자 존재 유무 검증
