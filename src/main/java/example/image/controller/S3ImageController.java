@@ -1,12 +1,10 @@
-package example.upload.controller;
+package example.image.controller;
 
-import example.upload.service.S3ImageService;
+import example.image.controller.dto.ImageDeleteRequest;
+import example.image.service.S3ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -22,6 +20,12 @@ public class S3ImageController {
     public ResponseEntity<List<String>> s3Upload(@RequestPart(value = "image", required = false) List<MultipartFile> multipartFile) {
         List<String> upload = s3ImageService.upload(multipartFile);
         return ResponseEntity.ok(upload);
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> s3Delete(@RequestBody ImageDeleteRequest imageDeleteRequest) {
+        s3ImageService.delete(imageDeleteRequest.getImageUrls());
+        return ResponseEntity.ok("이미지 삭제 성공");
     }
 
 }
