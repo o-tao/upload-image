@@ -27,7 +27,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class S3ImageService {
+public class ImageService {
 
     private final S3Client s3Client;
 
