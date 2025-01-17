@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -36,10 +37,6 @@ public class ImageService {
 
     // [public 메서드] 외부에서 사용, S3에 저장된 이미지 객체의 public url을 반환
     public List<String> upload(List<MultipartFile> files) {
-        // 빈 파일 검증
-        if (files.isEmpty()) {
-            throw new CustomApplicationException(ErrorCode.EMPTY_FILE);
-        }
         // 각 파일을 업로드하고 url을 리스트로 반환
         return files.stream()
                 .map(this::uploadImage)
@@ -66,9 +63,9 @@ public class ImageService {
         }
 
         // 허용되지 않는 확장자 검증
-        String extension = filename.substring(lastDotIndex + 1).toLowerCase();
+        String extension = URLConnection.guessContentTypeFromName(filename);
         List<String> allowedExtentionList = Arrays.asList("jpg", "jpeg", "png", "gif");
-        if (!allowedExtentionList.contains(extension)) {
+        if (extension == null || !allowedExtentionList.contains(extension)) {
             throw new CustomApplicationException(ErrorCode.INVALID_FILE_EXTENSION);
         }
     }

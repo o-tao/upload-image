@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
-    EMPTY_FILE(HttpStatus.BAD_REQUEST, "파일이 비어 있습니다."),
     IO_EXCEPTION_UPLOAD_FILE(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드 중 문제가 발생했습니다. 다시 시도해 주세요."),
     NOT_EXIST_FILE_EXTENSION(HttpStatus.BAD_REQUEST, "파일 확장자가 존재하지 않습니다."),
     NOT_EXIST_FILE(HttpStatus.BAD_REQUEST, "파일이 존재하지 않습니다."),
