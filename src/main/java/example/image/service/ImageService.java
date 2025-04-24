@@ -1,7 +1,10 @@
 package example.image.service;
 
+import example.domain.images.Image;
+import example.domain.images.ImageRepository;
 import example.global.exception.CustomApplicationException;
 import example.global.exception.ErrorCode;
+import example.image.service.dto.ImageUploadInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,22 +34,32 @@ import java.util.UUID;
 public class ImageService {
 
     private final S3Client s3Client;
+    private final ImageRepository imageRepository;
 
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
-    // [public 메서드] 외부에서 사용, S3에 저장된 이미지 객체의 public url을 반환
-    public List<String> upload(List<MultipartFile> files) {
-        // 각 파일을 업로드하고 url을 리스트로 반환
-        return files.stream()
+    // [public 메서드] 외부에서 사용, DB에 저장된 이미지의 uploadToken을 반환
+    public String upload(ImageUploadInfo imageUploadInfo) {
+        String uploadToken = (imageUploadInfo.getUploadToken() == null || imageUploadInfo.getUploadToken().isBlank())
+                ? UUID.randomUUID().toString()
+                : imageUploadInfo.getUploadToken();
+
+        // 각 이미지를 S3에 업로드
+        List<String> urls = imageUploadInfo.getImages().stream()
                 .map(this::uploadImage)
                 .toList();
+
+        // 업로드된 이미지를 저장
+        createImage(urls, uploadToken);
+
+        return uploadToken;
     }
 
-    // [private 메서드] validateFile메서드를 호출하여 유효성 검증 후 uploadImageToS3메서드에 데이터를 반환하여 S3에 파일 업로드, public url을 받아 서비스 로직에 반환
+    // [private 메서드] validateFile메서드를 호출하여 유효성 검증 후 uploadImageToS3메서드에 데이터를 반환하여 S3에 파일 업로드, public url을 받아 uploadImageToS3 서비스 로직에 반환
     private String uploadImage(MultipartFile file) {
         validateFile(file.getOriginalFilename()); // 파일 유효성 검증
-        return uploadImageToS3(file); // 이미지를 S3에 업로드하고, 저장된 파일의 public url을 서비스 로직에 반환
+        return uploadImageToS3(file); // 이미지를 S3에 업로드하고, 저장된 파일의 public url을 uploadImageToS3 서비스 로직에 반환
     }
 
     // [private 메서드] 파일 유효성 검증
@@ -64,7 +77,7 @@ public class ImageService {
 
         // 허용되지 않는 확장자 검증
         String extension = URLConnection.guessContentTypeFromName(filename);
-        List<String> allowedExtentionList = Arrays.asList("jpg", "jpeg", "png", "gif");
+        List<String> allowedExtentionList = Arrays.asList("image/jpg", "image/jpeg", "image/png", "image/gif");
         if (extension == null || !allowedExtentionList.contains(extension)) {
             throw new CustomApplicationException(ErrorCode.INVALID_FILE_EXTENSION);
         }
@@ -98,6 +111,15 @@ public class ImageService {
 
         // public url 반환
         return s3Client.utilities().getUrl(url -> url.bucket(bucketName).key(s3FileName)).toString();
+    }
+
+    // [private 메서드] DB에 업로드된 이미지를 전체 저장
+    private void createImage(List<String> urls, String uploadToken) {
+        List<Image> images = urls.stream()
+                .map(url -> Image.create(url, uploadToken, null))
+                .toList();
+
+        imageRepository.saveAll(images);
     }
 
     // [public 메서드] 이미지의 public url을 이용하여 S3에서 해당 이미지를 제거, getKeyFromImageAddress 메서드를 호출하여 삭제에 필요한 key 획득
